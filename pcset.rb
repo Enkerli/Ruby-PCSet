@@ -8,43 +8,9 @@
 #       Lilypond and MusicXML output
 #
 
-include Math
+#include Math ## Sonic Pi was throwing an error
 
-def choose(n, k)
-  return [[]] if n.nil? || n.empty? && k == 0
-  return [] if n.nil? || n.empty? && k > 0
-  return [[]] if n.size > 0 && k == 0
-  c2 = n.clone
-  c2.pop
-  new_element = n.clone.pop
-  choose(c2, k) + append_all(choose(c2, k-1), new_element)
-end
 
-def append_all(lists, element)
-  lists.map { |l| l << element }
-end
-
-def array_to_binary(array)
-  array.inject(0) {|sum, n| sum + 2**n}
-end
-
-# the following method is horrifically inelegant 
-# but avoids monkey-patching.
-# TODO: do this right, incl. error checking
-def pearsons(x, y)
-  if !x.is_a?(Array) || !y.is_a?(Array) then raise StandardError, "x and y must be arrays", caller end
-  if x.size != y.size then raise StandardError, "x and y must be same size", caller end
-  sum_x = x.inject(0) {|sum, n| sum + n}
-  sum_y = y.inject(0) {|sum, n| sum + n}
-  sum_square_x = x.inject(0) {|sum, n| sum + n * n}
-  sum_square_y = y.inject(0) {|sum, n| sum + n * n}
-  xy = []
-  x.zip(y) {|a, b| xy.push(a * b)}
-  sum_xy = xy.inject(0) {|sum, n| sum + n}
-  num = sum_xy - ((sum_x * sum_y)/x.size)
-  den = Math.sqrt((sum_square_x - ((sum_x*sum_x)/x.size)) * (sum_square_y - ((sum_y*sum_y)/x.size)))
-  (num/den)
-end
 
 class PCSet
   include Comparable
@@ -208,6 +174,7 @@ class PCSet
     [t, ti, tm, tmi, tc, tic, tmc, tmic].map{|x| x.reject{|pcs| pcs.pitches != @pitches}.length}
   end
 
+
   # Huron's aggregate dyadic consonance measure. 
   # Huron. Interval-Class Content in Equally Tempered Pitch-Class Sets: 
   # Common Scales Exhibit Optimum Tonal Consonance. 
@@ -289,7 +256,7 @@ class PCSet
   end
   
   def notes(middle_c = 0)
-    noteArray = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B']
+    noteArray = ['C','D♭','D','E♭','E','F','G♭','G','A♭','A','B♭','B'] ## Converting to flats with the actual sign
     if @base != 12 then raise StandardError, "PCSet.notes only makes sense for mod 12 pcsets", caller end
     out_string = String.new
     transpose(-middle_c).pitches.each do |p|
@@ -298,24 +265,24 @@ class PCSet
     out_string.chop.chop
   end
 
-  def info
-    print "modulo: #{@base}\n"
-    print "raw input: #{@input.inspect}\n"
-    print "pitch set: #{@pitches.inspect}\n"
-    print "notes: #{notes}\n"
-    print "normal: #{normal_form.inspect}\n"
-    print "prime: #{prime.inspect}\n"
-    print "interval vector: #{interval_vector.inspect}\n"
-    print "invariance vector: #{invariance_vector.inspect}\n"
-    print "huron ADC: #{huron[0]}  pearsons: #{huron[1]}\n"
-    print "balzano coherence: "
-    if is_strictly_coherent?
-      print "strictly coherent\n"
-    elsif is_coherent?
-      print "coherent\n"
-    else
-      print "false\n"
-    end
+  def info ## These all throw 'nil' in Sonic Pi
+    #print "modulo: #{@base}\n" 
+    #print "raw input: {@input.inspect}\n"
+    #print "pitch set: #{@pitches.inspect}\n"
+    #print "notes: #{notes}\n"
+    #print "normal: #{normal_form.inspect}\n"
+    #print "prime: #{prime.inspect}\n"
+    #print "interval vector: #{interval_vector.inspect}\n"
+    #print "invariance vector: #{invariance_vector.inspect}\n"
+    #print "huron ADC: #{huron[0]}  pearsons: #{huron[1]}\n"
+    #print "balzano coherence: "
+    #if is_strictly_coherent?
+    #  print "strictly coherent\n"
+    #elsif is_coherent?
+    #  print "coherent\n"
+    #else
+    # print "false\n"
+    #end
   end
   
   
@@ -336,6 +303,44 @@ class PCSet
   #           2^n:  BA9876543210
   # The smallest binary number is the most left-compact.
   #
+  def array_to_binary(array) ## Moving these definitions here because Sonic Pi wasn't finding them
+  array.inject(0) {|sum, n| sum + 2**n}
+end
+def choose(n, k)
+  return [[]] if n.nil? || n.empty? && k == 0
+  return [] if n.nil? || n.empty? && k > 0
+  return [[]] if n.size > 0 && k == 0
+  c2 = n.clone
+  c2.pop
+  new_element = n.clone.pop
+  choose(c2, k) + append_all(choose(c2, k-1), new_element)
+end
+
+def append_all(lists, element)
+  lists.map { |l| l << element }
+end
+
+def array_to_binary(array)
+  array.inject(0) {|sum, n| sum + 2**n}
+end
+
+# the following method is horrifically inelegant 
+# but avoids monkey-patching.
+# TODO: do this right, incl. error checking
+def pearsons(x, y)
+  if !x.is_a?(Array) || !y.is_a?(Array) then raise StandardError, "x and y must be arrays", caller end
+  if x.size != y.size then raise StandardError, "x and y must be same size", caller end
+  sum_x = x.inject(0) {|sum, n| sum + n}
+  sum_y = y.inject(0) {|sum, n| sum + n}
+  sum_square_x = x.inject(0) {|sum, n| sum + n * n}
+  sum_square_y = y.inject(0) {|sum, n| sum + n * n}
+  xy = []
+  x.zip(y) {|a, b| xy.push(a * b)}
+  sum_xy = xy.inject(0) {|sum, n| sum + n}
+  num = sum_xy - ((sum_x * sum_y)/x.size)
+  den = Math.sqrt((sum_square_x - ((sum_x*sum_x)/x.size)) * (sum_square_y - ((sum_y*sum_y)/x.size)))
+  (num/den)
+end
   def most_left_compact(pcset_array)
     if !pcset_array.all? {|pcs| pcs.length == pcset_array[0].length}
       raise ArgumentError, "PCSet.most_left_compact: All PCSets must be of same cardinality", caller
