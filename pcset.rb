@@ -303,7 +303,7 @@ class PCSet
   #           2^n:  BA9876543210
   # The smallest binary number is the most left-compact.
   #
-  def array_to_binary(array) ## Moving these definitions here because Sonic Pi wasn't finding them
+def array_to_binary(array) ## Moving these definitions here because Sonic Pi wasn't finding them
   array.inject(0) {|sum, n| sum + 2**n}
 end
 def choose(n, k)
